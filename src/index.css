@@ -111,7 +111,7 @@ progress {
   border-radius: 100px;
 }
 ::-webkit-progress-value {
-  background-color: var(--color-theme);
+  background-color: #68bbe3;
   border-radius: 100px;
 }
 
