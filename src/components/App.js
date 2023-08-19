@@ -8,6 +8,10 @@ import Questions from "./Questions";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
 import FinishScreen from "./FinishScreen";
+import Timer from "./Timer";
+import Footer from "./Footer";
+
+const SECS_PER_QUESTION = 30;
 
 const initialState = {
   questions: [],
@@ -16,6 +20,7 @@ const initialState = {
   answer: null,
   points: 0,
   highScore: 0,
+  secondRemaining: null,
 };
 
 const reducer = (state, action) => {
@@ -35,6 +40,7 @@ const reducer = (state, action) => {
       return {
         ...state,
         status: "active",
+        secondRemaining: state.questions.length * SECS_PER_QUESTION,
       };
     case "newAnswer":
       const question = state.questions.at(state.index);
@@ -67,16 +73,27 @@ const reducer = (state, action) => {
         index: 0,
         answer: null,
         points: 0,
+        secondRemaining: 10,
       };
     }
+    case "tick": {
+      return {
+        ...state,
+        secondRemaining: state.secondRemaining - 1,
+        status: state.secondRemaining === 0 ? "finished" : state.status,
+      };
+    }
+
     default:
       throw new Error("Unexpected action");
   }
 };
 
 function App() {
-  const [{ questions, status, index, answer, points, highScore }, dispatch] =
-    useReducer(reducer, initialState);
+  const [
+    { questions, status, index, answer, points, highScore, secondRemaining },
+    dispatch,
+  ] = useReducer(reducer, initialState);
 
   const noOfQuestions = questions.length;
   const maxPossiblePoints = questions.reduce(
@@ -84,7 +101,7 @@ function App() {
     0
   );
   useEffect(() => {
-    fetch("http://localhost:8080/questions")
+    fetch("https://mocki.io/v1/8d53b9e4-c092-43a8-ba20-294ee257f668")
       .then((res) => res.json())
       .then((data) => {
         dispatch({ type: "dataRecieved", payload: data });
@@ -118,12 +135,15 @@ function App() {
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              index={index}
-              numQuestions={noOfQuestions}
-            />
+            <Footer>
+              <Timer dispatch={dispatch} secondRemaining={secondRemaining} />
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                index={index}
+                numQuestions={noOfQuestions}
+              />
+            </Footer>
           </>
         )}
         {status === "finished" && (
